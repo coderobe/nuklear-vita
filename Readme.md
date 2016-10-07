@@ -10,13 +10,16 @@ commands describing primitive shapes as output. So instead of providing a
 layered library that tries to abstract over a number of platform and
 render backends it only focuses on the actual UI.
 
+## Dependencies
+- SDL 1.2
+- SDL_gfx
+
 ## Features
 - Immediate mode graphical user interface toolkit
 - Single header library
 - Written in C89 (ANSI C)
 - Small codebase (~15kLOC)
 - Focus on portability, efficiency and simplicity
-- No dependencies (not even the standard library if not wanted)
 - Fully skinnable and customizable
 - Low memory footprint with total memory control if needed or wanted
 - UTF-8 support
@@ -86,14 +89,9 @@ nk_end(&ctx);
 ```
 ![example](https://cloud.githubusercontent.com/assets/8057201/10187981/584ecd68-675c-11e5-897c-822ef534a876.png)
 
-## Bindings:
-Java: https://github.com/glegris/nuklear4j  
-Golang: https://github.com/golang-ui/nuklear  
-Rust: https://github.com/snuk182/nuklear-rust
-
 ## Credits:
 Developed by Micha Mettke and every direct or indirect contributor to the GitHub.
-
+Ported to PS Vita by Robin Broda and every direct or indirect contributor to coderobe/nuklear-vita on GitHub.
 
 Embeds `stb_texedit`, `stb_truetype` and `stb_rectpack` by Sean Barret (public domain)  
 Embeds `ProggyClean.ttf` font by Tristan Grimmer (MIT license).
