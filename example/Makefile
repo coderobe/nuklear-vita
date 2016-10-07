@@ -1,38 +1,65 @@
-# Flags
-CFLAGS = -std=c99 -pedantic -O2
+PHONY := all package clean
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
+ 
+CC := arm-vita-eabi-gcc
+CXX := arm-vita-eabi-g++
+STRIP := arm-vita-eabi-strip
+ 
+PROJECT_TITLE := Nuklear-Vita sample
+PROJECT_TITLEID := CDRB0NUKL
+ 
+PROJECT := nuklear-vita_sample
+LDFLAGS := -L$(VITASDK)/arm-vita-eabi/lib
+LIBS := -lSDL -lSDL_gfx -lvita2d -lSceDisplay_stub -lSceGxm_stub \
+        -lSceSysmodule_stub -lSceCtrl_stub -lScePgf_stub -lSceNetCtl_stub \
+        -lSceNet_stub -lScePower_stub -lSceKernel_stub -lSceCommonDialog_stub \
+        -lSceAudio_stub -lSceAppMgr_stub -lpng -ljpeg -lz -lm -lc
 
-ifeq ($(OS),Windows_NT)
-BIN := $(BIN).exe
-LIBS = -lglfw3 -lopengl32 -lm -lGLU32 -lGLEW32
-else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S),Darwin)
-		LIBS = -lglfw3 -framework OpenGL -lm -lGLEW -L/usr/local/lib
-		CFLAGS += -I/usr/local/include
-	else
-		LIBS = -lglfw -lGL -lm -lGLU -lGLEW
-	endif
-endif
-
-all: file_browser extended canvas skinning
-
-file_browser:
-	@mkdir -p bin
-	rm -f bin/file_browser $(OBJS)
-	$(CC) $(CFLAGS) -o bin/file_browser file_browser.c $(LIBS)
-
-extended:
-	@mkdir -p bin
-	rm -f bin/extended $(OBJS)
-	$(CC) $(CFLAGS) -o bin/extended extended.c $(LIBS)
-
-canvas:
-	@mkdir -p bin
-	rm -f bin/canvas $(OBJS)
-	$(CC) $(CFLAGS) -o bin/canvas canvas.c $(LIBS)
-
-skinning:
-	@mkdir -p bin
-	rm -f bin/skinning $(OBJS)
-	$(CC) $(CFLAGS) -o bin/skinning skinning.c $(LIBS)
-
+CXXFLAGS += -std=c++11 -g
+CFLAGS += -std=c89 -pedantic -g
+DEFS := -D__PSP2__
+ 
+SRC_C :=$(call rwildcard, src/, *.c)
+SRC_CPP :=$(call rwildcard, src/, *.cpp)
+ 
+OBJ_DIRS := $(addprefix out/, $(dir $(SRC_C:src/%.c=%.o))) $(addprefix out/, $(dir $(SRC_CPP:src/%.cpp=%.o)))
+OBJS := $(addprefix out/, $(SRC_C:src/%.c=%.o)) $(addprefix out/, $(SRC_CPP:src/%.cpp=%.o))
+ 
+ 
+all: package
+ 
+package: $(PROJECT).vpk
+ 
+$(PROJECT).vpk: eboot.bin param.sfo
+	vita-pack-vpk -s param.sfo -b eboot.bin \
+		--add sce_sys/icon0.png=sce_sys/icon0.png \
+		--add sce_sys/livearea/contents/bg.png=sce_sys/livearea/contents/bg.png \
+		--add sce_sys/livearea/contents/startup.png=sce_sys/livearea/contents/startup.png \
+		--add sce_sys/livearea/contents/template.xml=sce_sys/livearea/contents/template.xml \
+	$(PROJECT).vpk
+ 
+eboot.bin: $(PROJECT).velf
+	vita-make-fself $(PROJECT).velf eboot.bin
+ 
+param.sfo:
+	vita-mksfoex -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
+ 
+$(PROJECT).velf: $(PROJECT).elf
+	$(STRIP) -g $<
+	vita-elf-create $< $@
+ 
+$(PROJECT).elf: $(OBJS)
+	$(CXX) -Wl,-q $(LDFLAGS) -o $@ $^ $(LIBS) 
+ 
+$(OBJ_DIRS):
+	mkdir -p $@
+ 
+out/%.o : src/%.cpp | $(OBJ_DIRS)
+	$(CXX) -c $(DEFS) $(CXXFLAGS) -o $@ $<
+ 
+out/%.o : src/%.c | $(OBJ_DIRS)
+	$(CXX) -c $(DEFS) $(CFLAGS) -o $@ $<
+ 
+clean:
+	rm -f $(PROJECT).velf $(PROJECT).elf $(PROJECT).vpk param.sfo eboot.bin $(OBJS)
+	rm -r $(abspath $(OBJ_DIRS))

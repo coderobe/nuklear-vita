@@ -1,8 +1,8 @@
 {
-  "name": "nuklear",
+  "name": "nuklear-vita",
   "version": "1.0.0",
-  "repo": "vurtun/nuklear",
-  "description": "A small ANSI C gui toolkit",
+  "repo": "coderobe/nuklear-vita",
+  "description": "A small ANSI C gui toolkit for the playstation vita",
   "keywords": ["gl", "ui", "toolkit"],
-  "src": ["nuklear.h"]
+  "src": ["nuklear-vita.h"]
 }
