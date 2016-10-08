@@ -10,13 +10,13 @@ PROJECT_TITLEID := CDRB0NUKL
  
 PROJECT := nuklear-vita_sample
 LDFLAGS := -L$(VITASDK)/arm-vita-eabi/lib
-LIBS := -lSDL -lSDL_gfx -lvita2d -lSceDisplay_stub -lSceGxm_stub \
+LIBS := -ldebugnet -lSDL -lSDL_gfx -lvita2d -lSceDisplay_stub -lSceGxm_stub \
         -lSceSysmodule_stub -lSceCtrl_stub -lScePgf_stub -lSceNetCtl_stub \
         -lSceNet_stub -lScePower_stub -lSceKernel_stub -lSceCommonDialog_stub \
         -lSceAudio_stub -lSceAppMgr_stub -lpng -ljpeg -lz -lm -lc
 
-CXXFLAGS += -std=c++11 -g
-CFLAGS += -std=c89 -pedantic -g
+CXXFLAGS += -g -O0
+CFLAGS += -g -O0
 DEFS := -D__PSP2__
  
 SRC_C :=$(call rwildcard, src/, *.c)
@@ -45,7 +45,7 @@ param.sfo:
 	vita-mksfoex -s TITLE_ID="$(PROJECT_TITLEID)" "$(PROJECT_TITLE)" param.sfo
  
 $(PROJECT).velf: $(PROJECT).elf
-	$(STRIP) -g $<
+	#$(STRIP) -g $<
 	vita-elf-create $< $@
  
 $(PROJECT).elf: $(OBJS)
@@ -58,7 +58,7 @@ out/%.o : src/%.cpp | $(OBJ_DIRS)
 	$(CXX) -c $(DEFS) $(CXXFLAGS) -o $@ $<
  
 out/%.o : src/%.c | $(OBJ_DIRS)
-	$(CXX) -c $(DEFS) $(CFLAGS) -o $@ $<
+	$(CC) -c $(DEFS) $(CFLAGS) -o $@ $<
  
 clean:
 	rm -f $(PROJECT).velf $(PROJECT).elf $(PROJECT).vpk param.sfo eboot.bin $(OBJS)

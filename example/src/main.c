@@ -1,28 +1,38 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
 #include <string.h>
-#include <math.h>
-#include <assert.h>
-#include <math.h>
-
 #include <SDL/SDL.h>
+#include <debugnet.h>
+#include <psp2/kernel/processmgr.h>
+
+#define ip_server "192.168.11.144"
+#define port_server 18194
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
 #define NK_SDL_IMPLEMENTATION
 #include "../../nuklear.h"
 #include "../../nuklear-sdl-vita.h"
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 900
+#define WINDOW_HEIGHT 500
+
+int ret;
 
 int main(int argc, char **argv)
 {
+    ret = debugNetInit(ip_server,port_server,DEBUG);
+    debugNetPrintf(DEBUG, "Debug level %d\n", ret);
+    debugNetPrintf(ERROR, "Error level %d\n", ret);
+    debugNetPrintf(INFO, "Info level %d\n", ret);
+    debugNetPrintf(DEBUG, "\n", ret); 
+    
+    debugNetPrintf(DEBUG, "Initializing variables\n", ret);
     static SDL_Surface *screen_surface;
     struct nk_color background;
     int running = 1;
@@ -30,21 +40,26 @@ int main(int argc, char **argv)
     float bg[4];
 
     /* SDL setup */
+    debugNetPrintf(DEBUG, "SDL Init\n", ret);
     if( SDL_Init(SDL_INIT_VIDEO) == -1) {
-        printf( "Can't init SDL:  %s\n", SDL_GetError( ) );
+        debugNetPrintf(ERROR, "Can't init SDL:  %s\n", SDL_GetError( ) );
         return 1;
     }
+    debugNetPrintf(DEBUG, "SDL SetVideoMode\n", ret);
     screen_surface = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_SWSURFACE);
     if(screen_surface == NULL) {
-        printf( "Can't set video mode: %s\n", SDL_GetError( ) );
+        debugNetPrintf(ERROR, "Can't set video mode: %s\n", SDL_GetError( ) );
         return 1;
     }
 
+    debugNetPrintf(DEBUG, "Nuklear SDL init\n", ret);
     ctx = nk_sdl_init(screen_surface);
     background = nk_rgb(28,48,62);
 
+    debugNetPrintf(INFO, "Entering event loop\n", ret);
     while (running)
     {
+        debugNetPrintf(DEBUG, "Reading input\n", ret);
         /* Input */
         SDL_Event evt;
         nk_input_begin(ctx);
@@ -54,6 +69,7 @@ int main(int argc, char **argv)
         }
         nk_input_end(ctx);
 
+        debugNetPrintf(DEBUG, "Entering GUI scope\n", ret);
         /* GUI */
         {struct nk_panel layout;
         if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 210, 250),
@@ -63,9 +79,8 @@ int main(int argc, char **argv)
             enum {EASY, HARD};
             static int op = EASY;
             static int property = 20;
-            static char buffer[64];
-            static int len;
 
+            debugNetPrintf(DEBUG, "Spawning items\n", ret);
             nk_layout_row_static(ctx, 30, 80, 1);
             if (nk_button_label(ctx, "button"))
                 fprintf(stdout, "button pressed\n");
@@ -74,13 +89,13 @@ int main(int argc, char **argv)
             if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
-            nk_edit_string(ctx, NK_EDIT_SIMPLE, buffer, &len, 64, 0);
 
+            debugNetPrintf(DEBUG, "Spawning combo panel\n", ret);
             {struct nk_panel combo;
-            nk_layout_row_dynamic(ctx, 30, 1);
+            nk_layout_row_dynamic(ctx, 20, 1);
             nk_label(ctx, "background:", NK_TEXT_LEFT);
             nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_combo_begin_color(ctx, &combo, background, nk_vec2(400, 400))) {
+            if (nk_combo_begin_color(ctx, &combo, background, nk_vec2(nk_widget_width(ctx),400))) {
                 nk_layout_row_dynamic(ctx, 120, 1);
                 background = nk_color_picker(ctx, background, NK_RGBA);
                 nk_layout_row_dynamic(ctx, 25, 1);
@@ -91,14 +106,18 @@ int main(int argc, char **argv)
                 nk_combo_end(ctx);
             }}
         }
+        debugNetPrintf(DEBUG, "Nuklear end\n", ret);
         nk_end(ctx);}
 
+        debugNetPrintf(DEBUG, "Drawing image\n", ret);
         /* Draw */
         nk_color_fv(bg, background);
         nk_sdl_render(nk_rgb(30,30,30));
     }
 
 cleanup:
+    debugNetPrintf(DEBUG, "Cleaning up\n", ret);
+    debugNetFinish();
     nk_sdl_shutdown();
     SDL_Quit();
     return 0;

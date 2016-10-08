@@ -1,3 +1,13 @@
+#include <debugnet.h>
+#include <psp2/kernel/processmgr.h>
+#ifndef SHAREFILE_INCLUDED
+#define SHAREFILE_INCLUDED
+#ifdef  MAIN_FILE
+int ret;
+#else
+extern int ret;
+#endif
+#endif
 /*
  Nuklear - v1.156 - public domain
  no warrenty implied; use at your own risk.
@@ -12339,6 +12349,8 @@ nk_widget_text(struct nk_command_buffer *o, struct nk_rect b,
     label.y = b.y + t->padding.y;
     label.h = b.h - 2 * t->padding.y;
 
+    NK_ASSERT(&f != NULL);
+
     text_width = f->width(f->userdata, f->height, (const char*)string, len);
     text_width += (2.0f * t->padding.x);
 
@@ -16108,6 +16120,8 @@ nk_panel_is_nonblock(enum nk_panel_type type)
 NK_INTERN int
 nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type panel_type)
 {
+    debugNetPrintf(DEBUG, "IN Nuklear panel_begin\n", ret);
+    debugNetPrintf(DEBUG, "Defining variables\n", ret);
     struct nk_input *in;
     struct nk_window *win;
     struct nk_panel *layout;
@@ -16118,6 +16132,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     struct nk_vec2 scrollbar_size;
     struct nk_vec2 panel_padding;
 
+    debugNetPrintf(DEBUG, "Asserting\n", ret);
     NK_ASSERT(ctx);
     NK_ASSERT(ctx->current);
     NK_ASSERT(ctx->current->layout);
@@ -16126,6 +16141,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     if (ctx->current->flags & NK_WINDOW_HIDDEN)
         return 0;
 
+    debugNetPrintf(DEBUG, "Pulling state to stack\n", ret);
     /* pull state into local stack */
     style = &ctx->style;
     font = style->font;
@@ -16137,15 +16153,18 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
     win->buffer.userdata = ctx->userdata;
 #endif
 
+    debugNetPrintf(DEBUG, "Pulling style info to stack\n", ret);
     /* pull style configuration into local stack */
     scrollbar_size = style->window.scrollbar_size;
     panel_padding = nk_panel_get_padding(style, panel_type);
 
     /* window movement */
+    debugNetPrintf(DEBUG, "Handling window movement\n", ret);
     if ((win->flags & NK_WINDOW_MOVABLE) && !(win->flags & NK_WINDOW_ROM)) {
         int left_mouse_down;
         int left_mouse_click_in_cursor;
 
+        debugNetPrintf(DEBUG, "Calculating draggable window space\n", ret);
         /* calculate draggable window space */
         struct nk_rect header;
         header.x = win->bounds.x;
@@ -16156,6 +16175,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
             header.h += 2.0f * style->window.header.label_padding.y;
         } else header.h = panel_padding.y;
 
+        debugNetPrintf(DEBUG, "Window movement by dragging\n", ret);
         /* window movement by dragging */
         left_mouse_down = in->mouse.buttons[NK_BUTTON_LEFT].down;
         left_mouse_click_in_cursor = nk_input_has_mouse_click_down_in_rect(in,
@@ -16169,6 +16189,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         }
     }
 
+    debugNetPrintf(DEBUG, "Setting up panel\n", ret);
     /* setup panel */
     layout->type = panel_type;
     layout->flags = win->flags;
@@ -16200,13 +16221,16 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         layout->bounds.h -= layout->footer_height;
     }
 
+    debugNetPrintf(DEBUG, "Creating panel header\n", ret);
     /* panel header */
     if (nk_panel_has_header(win->flags, title))
     {
+        debugNetPrintf(DEBUG, "Defining variables\n", ret);
         struct nk_text text;
         struct nk_rect header;
         const struct nk_style_item *background = 0;
 
+        debugNetPrintf(DEBUG, "Calculating header boundaries\n", ret);
         /* calculate header bounds */
         header.x = win->bounds.x;
         header.y = win->bounds.y;
@@ -16214,12 +16238,14 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         header.h = font->height + 2.0f * style->window.header.padding.y;
         header.h += (2.0f * style->window.header.label_padding.y);
 
+        debugNetPrintf(DEBUG, "Shrinking panel by header\n", ret);
         /* shrink panel by header */
         layout->header_height = header.h;
         layout->bounds.y += header.h;
         layout->bounds.h -= header.h;
         layout->at_y += header.h;
 
+        debugNetPrintf(DEBUG, "Selecting correct header background and text color\n", ret);
         /* select correct header background and text color */
         if (ctx->active == win) {
             background = &style->window.header.active;
@@ -16232,6 +16258,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
             text.text = style->window.header.label_normal;
         }
 
+        debugNetPrintf(DEBUG, "Drawing header background\n", ret);
         /* draw header background */
         header.h += 1.0f;
         if (background->type == NK_STYLE_ITEM_IMAGE) {
@@ -16242,6 +16269,9 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
             nk_fill_rect(out, header, 0, background->data.color);
         }
 
+        debugNetPrintf(DEBUG, "Drawing window controls\n", ret);
+        #ifdef debug_draw_window_controls
+        debugNetPrintf(DEBUG, "Drawing close button\n", ret);
         /* window close button */
         {struct nk_rect button;
         button.y = header.y + style->window.header.padding.y;
@@ -16266,6 +16296,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
             }
         }
 
+        debugNetPrintf(DEBUG, "Drawing minimize button\n", ret);
         /* window minimize button */
         if (win->flags & NK_WINDOW_MINIMIZABLE) {
             nk_flags ws = 0;
@@ -16287,7 +16318,12 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
                     layout->flags & (nk_flags)~NK_WINDOW_MINIMIZED:
                     layout->flags | NK_WINDOW_MINIMIZED;
         }}
+        #else
+        debugNetPrintf(DEBUG, "... not!\n", ret);
+        #endif
 
+        debugNetPrintf(DEBUG, "Drawing header title\n", ret);
+        #ifdef debug_draw_header_title
         {/* window header title */
         int text_len = nk_strlen(title);
         struct nk_rect label = {0,0,0,0};
@@ -16300,8 +16336,12 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         label.h = font->height + 2 * style->window.header.label_padding.y;
         label.w = t + 2 * style->window.header.spacing.x;
         nk_widget_text(out, label,(const char*)title, text_len, &text, NK_TEXT_LEFT, font);}
+        #else
+        debugNetPrintf(DEBUG, "... not!\n", ret);
+        #endif
     }
 
+    debugNetPrintf(DEBUG, "Drawing window background\n", ret);
     /* draw window background */
     if (!(layout->flags & NK_WINDOW_MINIMIZED) && !(layout->flags & NK_WINDOW_DYNAMIC)) {
         struct nk_rect body;
@@ -16314,6 +16354,7 @@ nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type pan
         else nk_fill_rect(out, body, 0, style->window.fixed_background.data.color);
     }
 
+    debugNetPrintf(DEBUG, "Setting clipping rectangle\n", ret);
     /* set clipping rectangle */
     {struct nk_rect clip;
     layout->clip = layout->bounds;
@@ -16909,6 +16950,8 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
     int title_len;
     int ret = 0;
 
+    debugNetPrintf(DEBUG, "Nuklear begin_titled\n", ret);
+    debugNetPrintf(DEBUG, "Asserting\n", ret);    
     NK_ASSERT(ctx);
     NK_ASSERT(name);
     NK_ASSERT(title);
@@ -16917,12 +16960,14 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
     if (!ctx || ctx->current || !title || !name)
         return 0;
 
+    debugNetPrintf(DEBUG, "Searching for window\n", ret);
     /* find or create window */
     style = &ctx->style;
     title_len = (int)nk_strlen(name);
     title_hash = nk_murmur_hash(name, (int)title_len, NK_WINDOW_TITLE);
     win = nk_find_window(ctx, title_hash, name);
     if (!win) {
+        debugNetPrintf(DEBUG, "Creating new window\n", ret);
         /* create new window */
         nk_size name_length = (nk_size)nk_strlen(name);
         win = (struct nk_window*)nk_create_window(ctx);
@@ -16932,18 +16977,26 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
         if (flags & NK_WINDOW_BACKGROUND)
             nk_insert_window(ctx, win, NK_INSERT_FRONT);
         else nk_insert_window(ctx, win, NK_INSERT_BACK);
+        debugNetPrintf(DEBUG, "Initializing command buffer\n", ret);
         nk_command_buffer_init(&win->buffer, &ctx->memory, NK_CLIPPING_ON);
 
+        debugNetPrintf(DEBUG, "Setting window data\n", ret);
         win->flags = flags;
         win->bounds = bounds;
         win->name = title_hash;
         name_length = NK_MIN(name_length, NK_WINDOW_MAX_NAME-1);
+        debugNetPrintf(DEBUG, "Nuklear MEMCPY\n", ret);
         NK_MEMCPY(win->name_string, name, name_length);
+        debugNetPrintf(DEBUG, "... no crash yet?\n", ret);
+        debugNetPrintf(DEBUG, "Defining name length\n", ret);
         win->name_string[name_length] = 0;
+        debugNetPrintf(DEBUG, "Setting popup mode to false\n", ret);
         win->popup.win = 0;
         if (!ctx->active)
+            debugNetPrintf(DEBUG, "Marking window as active\n", ret);
             ctx->active = win;
     } else {
+        debugNetPrintf(DEBUG, "Updating window\n", ret);
         /* update window */
         win->flags &= ~(nk_flags)(NK_WINDOW_PRIVATE-1);
         win->flags |= flags;
@@ -16960,6 +17013,7 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
     /* window overlapping */
     if (!(win->flags & NK_WINDOW_HIDDEN))
     {
+        debugNetPrintf(DEBUG, "Window overlapping\n", ret);
         int inpanel, ishovered;
         const struct nk_window *iter = win;
         float h = ctx->style.font->height + 2.0f * style->window.header.padding.y +
@@ -16993,6 +17047,7 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
 
         /* activate window if clicked */
         if (iter && inpanel && (win != ctx->end) && !(iter->flags & NK_WINDOW_BACKGROUND)) {
+            debugNetPrintf(DEBUG, "Window clicked\n", ret);
             iter = win->next;
             while (iter) {
                 /* try to find a panel with higher priority in the same position */
@@ -17012,6 +17067,7 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
         }
 
         if (!iter && ctx->end != win) {
+            debugNetPrintf(DEBUG, "Moving window to front\n", ret);
             if (!(win->flags & NK_WINDOW_BACKGROUND)) {
                 /* current window is active in that position so transfer to top
                  * at the highest priority in stack */
@@ -17025,10 +17081,14 @@ nk_begin_titled(struct nk_context *ctx, struct nk_panel *layout,
             win->flags |= NK_WINDOW_ROM;
     }
 
+    debugNetPrintf(DEBUG, "Setting context\n", ret);
     win->layout = layout;
     ctx->current = win;
+    debugNetPrintf(DEBUG, "Nuklear panel_begin\n", ret);
     ret = nk_panel_begin(ctx, title, NK_PANEL_WINDOW);
+    debugNetPrintf(DEBUG, "Setting scrollbar offset\n", ret);
     layout->offset = &win->scrollbar;
+    debugNetPrintf(DEBUG, "Window created\n", ret);
     return ret;
 }
 
