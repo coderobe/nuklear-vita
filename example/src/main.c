@@ -79,7 +79,7 @@ int main(int argc, char **argv)
             enum {EASY, HARD};
             static int op = EASY;
             static int property = 20;
-
+            
             debugNetPrintf(DEBUG, "Spawning items\n", ret);
             nk_layout_row_static(ctx, 30, 80, 1);
             if (nk_button_label(ctx, "button"))

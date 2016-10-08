@@ -12349,8 +12349,6 @@ nk_widget_text(struct nk_command_buffer *o, struct nk_rect b,
     label.y = b.y + t->padding.y;
     label.h = b.h - 2 * t->padding.y;
 
-    NK_ASSERT(&f != NULL);
-
     text_width = f->width(f->userdata, f->height, (const char*)string, len);
     text_width += (2.0f * t->padding.x);
 
