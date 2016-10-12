@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         return 1;
     }
     debugNetPrintf(DEBUG, "SDL SetVideoMode\n", ret);
-    screen_surface = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, SDL_SWSURFACE);
+    screen_surface = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 24, SDL_FULLSCREEN);
     if(screen_surface == NULL) {
         debugNetPrintf(ERROR, "Can't set video mode: %s\n", SDL_GetError( ) );
         return 1;
