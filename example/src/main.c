@@ -59,60 +59,10 @@ int main(int argc, char **argv)
     debugNetPrintf(INFO, "Entering event loop\n", ret);
     while (running)
     {
-        debugNetPrintf(DEBUG, "Reading input\n", ret);
-        /* Input */
-        SDL_Event evt;
-        nk_input_begin(ctx);
-        while (SDL_PollEvent(&evt)) {
-            if (evt.type == SDL_QUIT) goto cleanup;
-            nk_sdl_handle_event(&evt);
-        }
-        nk_input_end(ctx);
-
-        debugNetPrintf(DEBUG, "Entering GUI scope\n", ret);
-        /* GUI */
-        {struct nk_panel layout;
-        if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 210, 250),
-            NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-            NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-        {
-            enum {EASY, HARD};
-            static int op = EASY;
-            static int property = 20;
-            
-            debugNetPrintf(DEBUG, "Spawning items\n", ret);
-            nk_layout_row_static(ctx, 30, 80, 1);
-            if (nk_button_label(ctx, "button"))
-                fprintf(stdout, "button pressed\n");
-            nk_layout_row_dynamic(ctx, 30, 2);
-            if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
-            if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
-
-            debugNetPrintf(DEBUG, "Spawning combo panel\n", ret);
-            {struct nk_panel combo;
-            nk_layout_row_dynamic(ctx, 20, 1);
-            nk_label(ctx, "background:", NK_TEXT_LEFT);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_combo_begin_color(ctx, &combo, background, nk_vec2(nk_widget_width(ctx),400))) {
-                nk_layout_row_dynamic(ctx, 120, 1);
-                background = nk_color_picker(ctx, background, NK_RGBA);
-                nk_layout_row_dynamic(ctx, 25, 1);
-                background.r = (nk_byte)nk_propertyi(ctx, "#R:", 0, background.r, 255, 1,1);
-                background.g = (nk_byte)nk_propertyi(ctx, "#G:", 0, background.g, 255, 1,1);
-                background.b = (nk_byte)nk_propertyi(ctx, "#B:", 0, background.b, 255, 1,1);
-                background.a = (nk_byte)nk_propertyi(ctx, "#A:", 0, background.a, 255, 1,1);
-                nk_combo_end(ctx);
-            }}
-        }
-        debugNetPrintf(DEBUG, "Nuklear end\n", ret);
-        nk_end(ctx);}
-
-        debugNetPrintf(DEBUG, "Drawing image\n", ret);
+        debugNetPrintf(DEBUG, "Drawing background\n", ret);
         /* Draw */
         nk_color_fv(bg, background);
-        nk_sdl_render(nk_rgb(30,30,30));
+        nk_sdl_render(background);
     }
 
 cleanup:
